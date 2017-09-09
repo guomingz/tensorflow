@@ -17,8 +17,10 @@ limitations under the License.
 
 #ifdef INTEL_MKL
 #define EIGEN_USE_THREADS
-
 #include <numeric>
+
+#include "tensorflow/core/kernels/aggregate_ops.h"
+#include "tensorflow/core/kernels/aggregate_ops_cpu.h"
 
 #include "tensorflow/core/framework/numeric_op.h"
 #include "tensorflow/core/framework/register_types.h"
@@ -53,13 +55,51 @@ class MklAddNOp : public OpKernel {
     const Tensor& input1 = MklGetInput(ctx, 1);
     GetMklShape(ctx, 1, &(mkl_context.input2_shape));
     bool input2_in_mkl_format = mkl_context.input2_shape.IsMklTensor();
-
+    
+    if (!input1_in_mkl_format && !input0.dims()) {  // handle the case of a scalar
+      const TensorShape& o_shape = input0.shape();
+      Tensor* out_tensor = nullptr;
+      mkl_context.output_shape.SetMklTensor(false);
+      AllocateOutputSetMklShape(ctx, 0, &out_tensor, o_shape,
+                                mkl_context.output_shape);
+      void* out_o = static_cast<void*>(out_tensor->flat<T>().data());
+      void* user_i1 = static_cast<void*>(const_cast<T*>(input0.flat<T>().data()));
+      void* user_i2 = static_cast<void*>(const_cast<T*>(input1.flat<T>().data()));
+      (static_cast<T*>(out_o))[0] =
+          std::plus<float>{}(((float*)(user_i1))[0], ((float*)(user_i2))[0]);
+      return;
+    }
+    
     mkl_context.in_dims = input1_in_mkl_format
         ? mkl_context.input1_shape.GetDimension()
         : input0.dims();
+      
     mkl_context.in_dims = input2_in_mkl_format
         ? mkl_context.input2_shape.GetDimension()
         : input1.dims();
+
+    bool CallEigen = false;
+    for (int i = 0; i < mkl_context.in_dims; i++) {
+        int size_dim =
+            input0.dim_size((mkl_context.in_dims - 1) - i);
+        if(!size_dim) {
+          CallEigen=true;
+          break;
+        }          
+    }
+    
+    if(!input1_in_mkl_format && !input2_in_mkl_format && CallEigen) {      
+      const TensorShape& o_shape = input0.shape();
+      Tensor* out_tensor = nullptr;
+      mkl_context.output_shape.SetMklTensor(false);
+      AllocateOutputSetMklShape(ctx, 0, &out_tensor, o_shape,
+                                mkl_context.output_shape);
+      auto To = out_tensor->flat<T>();
+      functor::Add2Functor<Device, T> functor2;
+      functor2(ctx->template eigen_device<Device>(), To, input0.flat<T>(), input1.flat<T>());
+      return;
+    }
+    
     // Generate size, stride for input if input is in MKL format.
     ExtractMklOpParams(&mkl_context.in1_sizes,
      &mkl_context.in1_strides, input0, &mkl_context.input1_shape);
@@ -69,13 +109,14 @@ class MklAddNOp : public OpKernel {
     std::vector<float> coeff(2, 1.0);
     mkl_context.MklCreateInputLayouts(ctx);
     CHECK_EQ(dnnSumCreate_F32(&mkl_context.Eltwise, mkl_context.attributes, 2,
-                              mkl_context.lt_input1, &coeff[0]),
+                              mkl_context.lt_input2, &coeff[0]),
              E_SUCCESS);
 
     Tensor mkl_tmp_input1_buf_tensor, mkl_tmp_input2_buf_tensor;
     mkl_context.MklPrepareAddNInputs(ctx, &mkl_tmp_input1_buf_tensor,
     &mkl_tmp_input2_buf_tensor);
     Tensor* output = nullptr;
+       
     if (input1_in_mkl_format || input2_in_mkl_format) {
      TensorShape tf_shape;
      mkl_context.output_shape.SetMklTensor(true);
@@ -126,6 +167,7 @@ class MklAddNOp : public OpKernel {
       for (int i = 0; i < in_dims; i++) {
         in_sizes[i] = input_shape->GetSizes()[i];
         in_strides[i] = input_shape->GetStrides()[i];
+        
       }
     } else {
       for (int i = 0; i < in_dims; i++) {
@@ -135,7 +177,7 @@ class MklAddNOp : public OpKernel {
       in_strides[0] = 1;
       for (int i = 1; i < in_dims; i++) {
         in_strides[i] =
-            in_strides[i - 1] * in_sizes[i - 1];
+            in_strides[i - 1] * in_sizes[i - 1];    
       }
     }
     *out_sizes = in_sizes;

@@ -5559,12 +5559,17 @@ tf_mkl_kernel_library(
     srcs = ["mkl_fused_batch_norm_op.cc"],
     deps = NN_DEPS + [
         "//third_party/mkl:intel_binary_blob",
+        
     ],
 )
 
 tf_mkl_kernel_library(
     name = "mkl_aggregate_ops",
     prefix = "mkl_aggregate_ops",
+    hdrs = [
+        "aggregate_ops.h",
+        "aggregate_ops_cpu.h",
+    ],
     deps = MATH_DEPS + [
         "//third_party/mkl:intel_binary_blob",
     ],
