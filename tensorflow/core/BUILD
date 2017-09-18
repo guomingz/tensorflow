@@ -1765,6 +1765,7 @@ tf_cuda_library(
     ) + if_mkl(
         [
             "//third_party/mkl:intel_binary_blob",
+            "@mkl_dnn//:mkl_dnn",
         ],
     ),
     alwayslink = 1,
@@ -1925,7 +1926,7 @@ CORE_CPU_LIB_HEADERS = CORE_CPU_BASE_HDRS + [
     "common_runtime/visitable_allocator.h",
     "graph/gradients.h",
     "graph/quantize_training.h",
-]
+] + if_mkl(["graph/mkl_graph_util.h"]),
 
 tf_cuda_library(
     name = "core_cpu_impl",
@@ -2025,9 +2026,10 @@ tf_cuda_library(
         "//tensorflow/core/grappler/optimizers:meta_optimizer",
         "//third_party/eigen3",
         "//tensorflow/core/kernels:required",
-    ] + if_mkl(
-        ["//third_party/mkl:intel_binary_blob"],
-    ) + tf_additional_core_deps() + if_static([":core_cpu_impl"]),
+    ] + if_mkl([
+        "//third_party/mkl:intel_binary_blob"
+        "@mkl_dnn//:mkl_dnn",
+        ]) + tf_additional_core_deps() + if_static([":core_cpu_impl"]),
     alwayslink = 1,
 )
 

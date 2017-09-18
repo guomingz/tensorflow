@@ -165,8 +165,8 @@ def tf_copts():
       "-DEIGEN_AVOID_STL_ARRAY",
       "-Iexternal/gemmlowp",
       "-Wno-sign-compare",
-      "-fno-exceptions",
       "-ftemplate-depth=900",
+      "-fno-exceptions",
   ]) + if_cuda(["-DGOOGLE_CUDA=1"]) + if_mkl(["-DINTEL_MKL=1", "-fopenmp",]) + if_android_arm(
       ["-mfpu=neon"]) + if_linux_x86_64(["-msse3"]) + select({
           clean_dep("//tensorflow:android"): [
@@ -529,7 +529,8 @@ def tf_cc_test(name,
                extra_copts=[],
                suffix="",
                linkopts=[],
-               **kwargs):
+               **kwargs,
+               nocopts=None):
   native.cc_test(
       name="%s%s" % (name, suffix),
       srcs=srcs + _binary_additional_srcs(),
@@ -550,7 +551,8 @@ def tf_cc_test(name,
           clean_dep("//tensorflow:darwin"): 1,
           "//conditions:default": 0,
       }),
-      **kwargs)
+      **kwargs,
+      nocopts=nocopts)
 
 
 # Part of the testing workflow requires a distinguishable name for the build
@@ -652,7 +654,8 @@ def tf_cc_tests(srcs,
                 tags=[],
                 size="medium",
                 args=None,
-                linkopts=[]):
+                linkopts=[],
+                nocopts=None):
   for src in srcs:
     tf_cc_test(
         name=src_to_test_name(src),
@@ -662,7 +665,8 @@ def tf_cc_tests(srcs,
         tags=tags,
         size=size,
         args=args,
-        linkopts=linkopts)
+        linkopts=linkopts,
+        nocopts=nocopts)
 
 
 def tf_cc_test_mkl(srcs,
@@ -672,7 +676,7 @@ def tf_cc_test_mkl(srcs,
                    tags=[],
                    size="medium",
                    args=None):
-  if_mkl(tf_cc_tests(srcs, deps, linkstatic, tags=tags, size=size, args=args))
+  if_mkl(tf_cc_tests(srcs, deps, linkstatic, tags=tags, size=size, args=args, nocopts="-fno-exceptions"))
 
 
 def tf_cc_tests_gpu(srcs,
@@ -870,18 +874,29 @@ def tf_mkl_kernel_library(name,
                           deps=None,
                           alwayslink=1,
                           copts=tf_copts(),
+                          nocopts="-fno-exceptions",
                           **kwargs):
-  if_mkl(
-      tf_kernel_library(
-          name,
-          prefix=prefix,
+    if not bool(srcs):
+        srcs = []
+    if not bool(hdrs):
+        hdrs = []
+
+    if prefix:    
+        srcs = srcs + native.glob(
+            [prefix + "*.cc"])
+        hdrs = hdrs + native.glob(
+            [prefix + "*.h"])
+
+    if_mkl(
+      native.cc_library(
+          name=name,
           srcs=srcs,
-          gpu_srcs=gpu_srcs,
           hdrs=hdrs,
           deps=deps,
           alwayslink=alwayslink,
-          copts=copts,
-          **kwargs))
+          copts=tf_copts(),
+          nocopts=nocopts
+      ))
 
 
 # Bazel rules for building swig files.
