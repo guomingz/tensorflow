@@ -1926,7 +1926,7 @@ CORE_CPU_LIB_HEADERS = CORE_CPU_BASE_HDRS + [
     "common_runtime/visitable_allocator.h",
     "graph/gradients.h",
     "graph/quantize_training.h",
-] + if_mkl(["graph/mkl_graph_util.h"]),
+] + if_mkl(["graph/mkl_graph_util.h"])
 
 tf_cuda_library(
     name = "core_cpu_impl",
@@ -2027,7 +2027,7 @@ tf_cuda_library(
         "//third_party/eigen3",
         "//tensorflow/core/kernels:required",
     ] + if_mkl([
-        "//third_party/mkl:intel_binary_blob"
+        "//third_party/mkl:intel_binary_blob",
         "@mkl_dnn//:mkl_dnn",
         ]) + tf_additional_core_deps() + if_static([":core_cpu_impl"]),
     alwayslink = 1,

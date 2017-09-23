@@ -529,8 +529,8 @@ def tf_cc_test(name,
                extra_copts=[],
                suffix="",
                linkopts=[],
-               **kwargs,
-               nocopts=None):
+               nocopts=None,
+               **kwargs):
   native.cc_test(
       name="%s%s" % (name, suffix),
       srcs=srcs + _binary_additional_srcs(),
@@ -551,8 +551,8 @@ def tf_cc_test(name,
           clean_dep("//tensorflow:darwin"): 1,
           "//conditions:default": 0,
       }),
-      **kwargs,
-      nocopts=nocopts)
+      nocopts=nocopts,
+      **kwargs)
 
 
 # Part of the testing workflow requires a distinguishable name for the build
