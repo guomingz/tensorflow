@@ -6203,7 +6203,7 @@ tf_cc_test(
     ],
 )
 
-tf_cc_test(
+tf_cc_test_mkl(
     name = "mkl_quantized_pooling_ops_test",
     size = "small",
     srcs = ["mkl_quantized_pooling_ops_test.cc"],
