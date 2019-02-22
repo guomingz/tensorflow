@@ -16,10 +16,10 @@ limitations under the License.
 #ifndef TENSORFLOW_CORE_KERNELS_CROP_AND_RESIZE_OP_H_
 #define TENSORFLOW_CORE_KERNELS_CROP_AND_RESIZE_OP_H_
 
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "tensorflow/core/framework/numeric_types.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor_types.h"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
 namespace functor {
@@ -31,7 +31,7 @@ struct CropAndResize {
                   typename TTypes<T, 4>::ConstTensor image,
                   typename TTypes<float, 2>::ConstTensor boxes,
                   typename TTypes<int32, 1>::ConstTensor box_ind,
-                  string method_name, float extrapolation_value,
+                  const string& method_name, float extrapolation_value,
                   typename TTypes<float, 4>::Tensor crops);
 };
 

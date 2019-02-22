@@ -3537,6 +3537,22 @@ tf_py_test(
     ],
 )
 
+tf_py_test(
+    name = "sgd_optimizers_test",
+    size = "small",
+    srcs = ["sgd_optimizers_test.py"],
+    additional_deps = [
+        "//third_party/py/numpy",
+        "//tensorflow/python:client_testlib",
+        "//tensorflow/python:framework_for_generated_wrappers",
+        "//tensorflow/python:constant_op",
+        "//tensorflow/python:variables",
+        "//tensorflow/python:math_ops",
+        "//tensorflow/python:nn_ops",
+        "//tensorflow/python:training",
+    ],
+)
+
 # Custom op tests
 tf_custom_op_library(
     name = "ackermann_op.so",
