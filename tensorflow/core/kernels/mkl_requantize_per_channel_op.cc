@@ -20,7 +20,10 @@ limitations under the License.
 #include <math.h>
 
 #include "mkldnn.hpp"
+<<<<<<< ours
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+=======
+>>>>>>> theirs
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/type_traits.h"
@@ -29,6 +32,10 @@ limitations under the License.
 #include "tensorflow/core/kernels/no_op.h"
 #include "tensorflow/core/lib/core/errors.h"
 #include "tensorflow/core/util/mkl_util.h"
+<<<<<<< ours
+=======
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+>>>>>>> theirs
 
 namespace tensorflow {
 
@@ -141,8 +148,13 @@ class MklRequantizePerChannelOp : public OpKernel {
       output_min->flat<float>()(0) = input_requested_min_float;
       output_max->flat<float>()(0) = input_requested_max_float;
     } catch (mkldnn::error& e) {
+<<<<<<< ours
       string error_msg = "Status: " + std::to_string(e.status) +
                          ", message: " + std::string(e.message) + ", in file " +
+=======
+      string error_msg = "Status: " + std::to_string(e.status) + ", message: " +
+                         std::string(e.message) + ", in file " +
+>>>>>>> theirs
                          std::string(__FILE__) + ":" + std::to_string(__LINE__);
       OP_REQUIRES_OK(
           ctx, errors::Aborted("Operation received an exception:", error_msg));

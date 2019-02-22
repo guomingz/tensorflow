@@ -20,7 +20,10 @@ limitations under the License.
 #include <math.h>
 #include <limits>
 
+<<<<<<< ours
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+=======
+>>>>>>> theirs
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/type_traits.h"
@@ -29,6 +32,10 @@ limitations under the License.
 #include "tensorflow/core/kernels/no_op.h"
 #include "tensorflow/core/lib/core/errors.h"
 #include "tensorflow/core/util/mkl_util.h"
+<<<<<<< ours
+=======
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+>>>>>>> theirs
 
 namespace tensorflow {
 

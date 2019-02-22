@@ -693,7 +693,10 @@ tf_kernel_library(
         ":range_dataset_op",
         ":reader_dataset_ops",
         ":repeat_dataset_op",
+<<<<<<< ours
         ":shard_dataset_op",
+=======
+>>>>>>> theirs
         ":sampling_dataset_op",
         ":shuffle_dataset_op",
         ":skip_dataset_op",

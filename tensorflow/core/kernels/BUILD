@@ -7014,6 +7014,7 @@ tf_mkl_kernel_library(
             ":pooling_ops",
             ":quantization_utils",
             ":transpose_functor",
+<<<<<<< ours
             "//third_party/eigen3",
             "@gemmlowp",
             "@mkl_dnn",
@@ -7021,6 +7022,18 @@ tf_mkl_kernel_library(
             "//tensorflow/core:framework",
             "//tensorflow/core:lib",
             "//third_party/mkl:intel_binary_blob",
+=======
+            "//tensorflow/core:array_ops_op_lib",
+            "//tensorflow/core:core_cpu",
+            "//tensorflow/core:framework",
+            "//tensorflow/core:lib",
+            "//tensorflow/core:math_ops_op_lib",
+            "//tensorflow/core:nn_ops_op_lib",
+            "//third_party/eigen3",
+            "//third_party/mkl:intel_binary_blob",
+            "@gemmlowp",
+            "@mkl_dnn",
+>>>>>>> theirs
         ],
     ),
 )
@@ -7029,7 +7042,11 @@ tf_cc_test_mkl(
     name = "mkl_requantize_ops_test",
     size = "small",
     srcs = ["mkl_requantize_ops_test.cc"],
+<<<<<<< ours
     linkstatic = 1,  # Fixes dyld error on MacOS.
+=======
+    tags = ["no_mac"],  #TODO(penporn): Re-enable the test on MacOS.
+>>>>>>> theirs
     deps = [
         ":mkl_requantize_ops",
         ":ops_testutil",

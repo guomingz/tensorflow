@@ -16,8 +16,8 @@ limitations under the License.
 #ifndef TENSORFLOW_CORE_KERNELS_MKL_QUANTIZED_CONV_OPS_H_
 #define TENSORFLOW_CORE_KERNELS_MKL_QUANTIZED_CONV_OPS_H_
 
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 #include "tensorflow/core/framework/tensor.h"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 #ifdef INTEL_MKL
 
@@ -27,7 +27,11 @@ float MklFloatForOneQuantizedLevel(float range_min, float range_max) {
   int64 highest = static_cast<int64>(Eigen::NumTraits<T>::highest());
   int64 lowest = static_cast<int64>(Eigen::NumTraits<T>::lowest());
 
+<<<<<<< ours
   // Adjusting for having a symmetric range.
+=======
+  // Adjusting for having a symmetric range. 
+>>>>>>> theirs
   // for example: for 8-bit [-127, 127] as opposed to [-128, 127].
   if (lowest < -highest) ++lowest;
 

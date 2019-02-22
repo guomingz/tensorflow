@@ -2667,6 +2667,10 @@ tf_module {
   member_method {
     name: "Requantize"
     argspec: "args=[\'input\', \'input_min\', \'input_max\', \'requested_output_min\', \'requested_output_max\', \'out_type\'], varargs=None, keywords=None, defaults=None"
+  }  
+  member_method {
+    name: "RequantizePerChannel"
+    argspec: "args=[\'input\', \'input_min\', \'input_max\', \'requested_output_min\', \'requested_output_max\', \'out_type\'], varargs=None, keywords=None, defaults=None"
   }
   member_method {
     name: "RequantizePerChannel"
