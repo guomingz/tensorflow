@@ -2006,7 +2006,7 @@ Status MklLayoutRewritePass::SetUpInputs(
       "QuantizedDepthwiseConv2D",
       "QuantizedDepthwiseConv2DWithBias",
       "QuantizedDepthwiseConv2DWithBiasAndRelu",
-      "QuantizedDepthwiseConv2DWithBiasAndReluAndRequantize"};
+      "QuantizedDepthwiseConv2DWithBiasAndReluAndRequantize",
       "QuantizedMatMulWithBias",
       "QuantizedMatMulWithBiasAndRelu",
       "QuantizedMatMulWithBiasAndReluAndRequantize"};
