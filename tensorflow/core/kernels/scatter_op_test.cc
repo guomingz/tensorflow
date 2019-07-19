@@ -47,7 +47,6 @@ class ScatterUpdateOpTest : public OpsTestBase {
     TF_ASSERT_OK(InitOp());
   }
 };
-
 class ScatterSubOpTest : public OpsTestBase {
  protected:
   void MakeOp(DataType variable_ref_type, DataType index_type) {
@@ -198,6 +197,34 @@ TEST_F(ScatterSubOpTest, Error_IndexOutOfRange) {
   EXPECT_TRUE(
       absl::StrContains(s.ToString(), "indices[2] = 99 is not in [0, 14)"))
       << s;
+}
+
+TEST_F(ScatterSubOpTest, StressIndexTest) {
+  MakeOp(DT_INT32_REF, DT_INT32);
+  // Feed and run
+  const int kRows = 1;
+  std::vector<int32> values;
+  values.reserve(kRows);
+  for (int i = 0; i < kRows; i++) {
+    values.push_back(0);
+  }
+  const int kNumUpdates = 1000000;
+  std::vector<int32> indices;
+  std::vector<int32> updates;
+  for (int i = 0; i < kNumUpdates; i++) {
+    indices.push_back(0);
+    updates.push_back(1);
+  }
+
+  AddInputFromArray<int32>(TensorShape({kRows}), values);
+  AddInputFromArray<int32>(TensorShape({kNumUpdates}), indices);
+  AddInputFromArray<int32>(TensorShape({kNumUpdates}), updates);
+  testing::ItemsProcessed((static_cast<int64>(kNumUpdates)));
+  Status s = RunOpKernel();
+  Tensor params_tensor = *mutable_input(0).tensor;
+  Tensor expected(allocator(), DT_INT32, TensorShape({1}));
+  test::FillValues<int32>(&expected, {-1000000});
+  test::ExpectTensorEqual<int32>(expected, params_tensor);
 }
 
 TEST_F(ScatterUpdateOpTest, Error_WrongDimsIndices) {

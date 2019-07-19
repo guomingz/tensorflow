@@ -189,6 +189,7 @@ struct AssignSYCL<scatter_op::UpdateOp::MAX> {
 }  // namespace scatter_op
 
 namespace functor {
+#define kMaxLocks 1024
 template <typename Device, typename T, typename Index, scatter_op::UpdateOp op>
 struct ScatterFunctor {
   Index operator()(OpKernelContext* c, const Device& d,
@@ -206,9 +207,28 @@ struct ScatterFunctorBase {
     // indices and params sizes were validated in DoCompute().
     const Index N = static_cast<Index>(indices.size());
     const Index limit = static_cast<Index>(params.dimension(0));
-    mutex mu_;
-    Index bad_index GUARDED_BY(mu_) = -1;
-    auto ParallelScatter = [&](Index start, Index end) LOCKS_EXCLUDED(mu_){
+    unsigned long int num_locks, entries_per_lock;
+    // Duplicate entries need to be handled correctly.
+    // Multiple updates to the same index has to be serialized.
+    // To reduce the number of locks and the memory usage,
+    // we divide the whole index space into kMaxLocks regions
+    // with each lock serializing access to a region.
+    if (limit <= kMaxLocks) {
+      num_locks = limit;
+      entries_per_lock = 1;
+
+    } else {
+      num_locks = kMaxLocks;
+      entries_per_lock = (limit % kMaxLocks == 0) ? limit / kMaxLocks
+                                                  : (limit / kMaxLocks + 1);
+    }
+
+    std::vector<std::atomic<bool>> accessed(num_locks);
+    auto ParallelInit = [&](Index start, Index end) {
+      for (Index i = start; i < end; i++) accessed.at(i) = false;
+    };
+    Index bad_index = -1;
+    auto ParallelScatter = [&](Index start, Index end) {
       for (Index i = start; i < end; i++) {
         // Grab the index and check its validity.  Do this carefully,
         // to avoid checking the value and grabbing it again from
@@ -216,18 +236,30 @@ struct ScatterFunctorBase {
         // between).
         const Index index = ::tensorflow::internal::SubtleMustCopy(indices(i));
         if (!FastBoundsCheck(index, limit)) {
-          mutex_lock lock(mu_);
           bad_index = i;
           return;
         }
+        unsigned long int lock_id =
+            (entries_per_lock == 1) ? index : (index / entries_per_lock);
         // Copy last Ndim-1 dimensions of updates[i] to params[index]
+        // Separating test from test and set to improve performance and reduce
+        // coherence overhead.
+        // Test
+        while (accessed.at(lock_id)) {
+        }
+        // Test and Set
+        while (accessed.at(lock_id).exchange(true)) {
+        }
         scatter_op::internal::Assign<op>::Run(params.template chip<0>(index),
                                               updates.template chip<0>(i));
+        accessed.at(lock_id) = false;
       }
     };
     const DeviceBase::CpuWorkerThreads& worker_threads =
         *(c->device()->tensorflow_cpu_worker_threads());
-    Shard(worker_threads.num_threads, worker_threads.workers, N, 35.0,
+    Shard(worker_threads.num_threads, worker_threads.workers, num_locks, 3500.0,
+          ParallelInit);  // Cost is arbitrary for now.
+    Shard(worker_threads.num_threads, worker_threads.workers, N, 3500.0,
           ParallelScatter);  // Cost is arbitrary for now.
     return bad_index;
   }
