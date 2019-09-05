@@ -384,6 +384,7 @@ cc_library(
     name = "util_port",
     srcs = ["util/port.cc"],
     hdrs = ["util/port.h"],
+    copts = tf_copts(),
     visibility = [
         "//tensorflow/core:__pkg__",
         "//tensorflow/python:__pkg__",
